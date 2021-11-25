@@ -1,24 +1,33 @@
 import { config } from "../config/Constants";
 import { Request, response, Response } from "express";
 import shortId from 'shortid';
+import { URLModel } from "../database/model/URL";
 
 export class URLController {
     public async shorten (req: Request, res: Response): Promise<void> {
         const { originURL } = req.body;
+        const url = await URLModel.findOne({ originURL })
+        if(url){
+            res.json(url)
+            return
+        }
+
         const hash = shortId.generate();
         const shortURL = `${config.API_URL}/${hash}`
+        const newURL = await URLModel.create({ originURL, hash, shortURL})
 
-        res.json({ originURL, hash, shortURL})
+        res.json(newURL)
     }
 
     public async redirect (req: Request, res: Response): Promise<void> {
         const { hash } = req.params
+		const url = await URLModel.findOne({ hash })
 
-        const url = {
-            originURL: 'https://google.com.br',
-            hash: '7AzIe8Xaa',
-            shortURL: 'http://localhost:5000/7AzIe8Xaa'
-        }
-        res.redirect(url.originURL)
+		if (url) {
+			response.redirect(url.originURL)
+			return
+		}
+
+		response.status(400).json({ error: 'URL not found' })
     }
 }

@@ -1,9 +1,12 @@
 import { URLController } from './Controllers/url-controller';
-import express, { application, Request, Response } from 'express';
+import express from 'express';
+import { MongoConnection } from './database/MongoConnection';
 
 const api = express();
 api.use(express.json())
 const urlController = new URLController()
+const database = new MongoConnection();
+database.connect()
 
 api.get('/:hash', urlController.redirect)
 api.post('/shorten', urlController.shorten)
